@@ -1,5 +1,8 @@
 {
   "name": "@alignui/vscode-extension",
   "version": "1.0.0",
-  "main": "index.ts"
+  "main": "index.ts",
+  "devDependencies": {
+    "@types/vscode": "^1.110.0"
+  }
 }
