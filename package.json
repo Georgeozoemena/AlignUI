@@ -1,0 +1,11 @@
+{
+  "name": "align-ui",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "figma-plugin",
+    "backend",
+    "vscode-extension",
+    "shared"
+  ]
+}
