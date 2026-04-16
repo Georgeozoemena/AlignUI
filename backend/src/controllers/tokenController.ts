@@ -1,20 +1,27 @@
 import { Request, Response } from 'express';
-import { DesignToken } from '@alignui/shared';
+import { TokensPayloadSchema, ValidatedToken } from '../validators/tokenValidator';
 
-// In-memory store for now
-let tokenStore: DesignToken[] = [];
+// In-memory store — will be replaced with MongoDB
+let tokenStore: ValidatedToken[] = [];
+
+export function getStoredTokens(): ValidatedToken[] {
+  return tokenStore;
+}
 
 export function receiveTokens(req: Request, res: Response) {
-  const tokens: DesignToken[] = req.body.tokens;
+  const result = TokensPayloadSchema.safeParse(req.body);
 
-  if (!Array.isArray(tokens)) {
-    res.status(400).json({ error: 'tokens must be an array' });
+  if (!result.success) {
+    res.status(400).json({
+      error: 'Invalid token payload',
+      details: result.error.flatten(),
+    });
     return;
   }
 
-  tokenStore = tokens;
-  console.log(`Received ${tokens.length} tokens`);
-  res.json({ success: true, count: tokens.length });
+  tokenStore = result.data.tokens;
+  console.log(`[tokens] Stored ${tokenStore.length} tokens`);
+  res.json({ success: true, count: tokenStore.length });
 }
 
 export function getTokens(_req: Request, res: Response) {
