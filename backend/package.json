@@ -4,7 +4,8 @@
   "main": "src/index.ts",
   "scripts": {
     "start": "ts-node src/index.ts",
-    "dev": "ts-node src/index.ts"
+    "dev": "ts-node src/index.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@alignui/shared": "*",
@@ -23,6 +24,9 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^25.5.2",
-    "ts-node": "*"
+    "@types/supertest": "^7.2.0",
+    "supertest": "^7.2.2",
+    "ts-node": "*",
+    "vitest": "^4.1.4"
   }
 }
