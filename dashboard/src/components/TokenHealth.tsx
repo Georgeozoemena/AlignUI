@@ -1,4 +1,4 @@
-import { DesignToken } from '@alignui/shared';
+import type { DesignToken } from '../types';
 
 interface TokenHealthProps {
   tokens: DesignToken[];

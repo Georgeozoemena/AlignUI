@@ -1,4 +1,4 @@
-import { DesignToken, DriftIssue } from '@alignui/shared';
+import type { DesignToken, DriftIssue } from './types';
 
 const API_KEY = import.meta.env.VITE_API_KEY ?? '';
 

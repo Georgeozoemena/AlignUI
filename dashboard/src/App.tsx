@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { DriftIssue, DesignToken } from '@alignui/shared';
+import type { DriftIssue, DesignToken } from './types';
 import { getTokens, getIssues } from './api';
 import { StatCard } from './components/StatCard';
 import { IssueTable } from './components/IssueTable';

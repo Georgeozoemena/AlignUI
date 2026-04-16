@@ -1,15 +1,8 @@
-import { DriftIssue } from '@alignui/shared';
+import type { DriftIssue } from '../types';
 
 interface IssueTableProps {
   issues: DriftIssue[];
 }
-
-const TYPE_COLORS: Record<string, string> = {
-  color: 'bg-red-100 text-red-700',
-  spacing: 'bg-yellow-100 text-yellow-700',
-  typography: 'bg-blue-100 text-blue-700',
-  'border-radius': 'bg-purple-100 text-purple-700',
-};
 
 export function IssueTable({ issues }: IssueTableProps) {
   if (issues.length === 0) {

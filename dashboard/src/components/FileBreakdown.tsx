@@ -1,4 +1,4 @@
-import { DriftIssue } from '@alignui/shared';
+import type { DriftIssue } from '../types';
 
 interface FileBreakdownProps {
   issues: DriftIssue[];
