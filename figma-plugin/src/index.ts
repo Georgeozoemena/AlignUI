@@ -1,10 +1,21 @@
-figma.showUI(__html__, { width: 400, height: 300 });
+figma.showUI(__html__, { width: 380, height: 420 });
 
-figma.ui.onmessage = (msg: { type: string }) => {
+// Load saved settings and send to UI on open
+(async () => {
+  const apiKey = await figma.clientStorage.getAsync('apiKey') ?? '';
+  const backendUrl = await figma.clientStorage.getAsync('backendUrl') ?? '';
+  figma.ui.postMessage({ type: 'load-settings', apiKey, backendUrl });
+})();
+
+figma.ui.onmessage = async (msg: { type: string; apiKey?: string; backendUrl?: string }) => {
   if (msg.type === 'export-tokens') {
     const tokens = extractTokens();
-    console.log('Extracted tokens:', JSON.stringify(tokens, null, 2));
     figma.ui.postMessage({ type: 'tokens-ready', tokens });
+  }
+
+  if (msg.type === 'save-settings') {
+    await figma.clientStorage.setAsync('apiKey', msg.apiKey ?? '');
+    await figma.clientStorage.setAsync('backendUrl', msg.backendUrl ?? '');
   }
 };
 
@@ -24,7 +35,6 @@ function extractTokens() {
   }
 
   for (const node of nodes) {
-    // Extract fill colors
     if ('fills' in node) {
       const fills = node.fills as Paint[];
       for (const fill of fills) {
@@ -40,7 +50,6 @@ function extractTokens() {
       }
     }
 
-    // Extract spacing (width/height as proxy for spacing tokens)
     if ('width' in node) {
       tokens.push({
         name: `${node.name}/width`,
@@ -55,7 +64,6 @@ function extractTokens() {
 }
 
 function rgbToHex(r: number, g: number, b: number): string {
-  const toHex = (n: number) =>
-    Math.round(n * 255).toString(16).padStart(2, '0');
+  const toHex = (n: number) => Math.round(n * 255).toString(16).padStart(2, '0');
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }

@@ -1,36 +1,107 @@
 <!DOCTYPE html>
 <html>
-  <body>
-    <button id="export">Export Tokens</button>
-    <p id="status"></p>
+<head>
+  <style>
+    body { font-family: sans-serif; padding: 16px; font-size: 13px; }
+    h2 { margin: 0 0 12px; font-size: 15px; }
+    input { width: 100%; box-sizing: border-box; padding: 6px 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
+    button { width: 100%; padding: 8px; background: #18a0fb; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    button:disabled { background: #aaa; cursor: not-allowed; }
+    #status { margin-top: 10px; font-size: 12px; color: #555; }
+    #preview { margin-top: 12px; font-size: 11px; background: #f5f5f5; padding: 8px; border-radius: 4px; max-height: 160px; overflow-y: auto; display: none; }
+    .token-row { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #eee; }
+    .swatch { width: 12px; height: 12px; border-radius: 2px; display: inline-block; margin-right: 4px; vertical-align: middle; border: 1px solid #ddd; }
+  </style>
+</head>
+<body>
+  <h2>AlignUI — Export Tokens</h2>
 
-    <script>
-      const status = document.getElementById('status');
+  <input type="text" id="apiKey" placeholder="API Key" />
+  <input type="text" id="backendUrl" placeholder="Backend URL (default: http://localhost:3000)" />
 
-      document.getElementById('export').onclick = () => {
-        status.textContent = 'Extracting tokens...';
-        parent.postMessage({ pluginMessage: { type: 'export-tokens' } }, '*');
-      };
+  <button id="exportBtn">Export Tokens</button>
+  <div id="status"></div>
+  <div id="preview"></div>
 
-      window.onmessage = async (event) => {
-        const msg = event.data.pluginMessage;
-        if (!msg || msg.type !== 'tokens-ready') return;
+  <script>
+    const statusEl = document.getElementById('status');
+    const previewEl = document.getElementById('preview');
+    const exportBtn = document.getElementById('exportBtn');
 
-        status.textContent = `Sending ${msg.tokens.length} tokens to backend...`;
+    // Persist settings in plugin storage
+    window.onmessage = async (event) => {
+      const msg = event.data.pluginMessage;
+      if (!msg) return;
+
+      if (msg.type === 'load-settings') {
+        document.getElementById('apiKey').value = msg.apiKey || '';
+        document.getElementById('backendUrl').value = msg.backendUrl || '';
+      }
+
+      if (msg.type === 'tokens-ready') {
+        renderPreview(msg.tokens);
+
+        const apiKey = document.getElementById('apiKey').value.trim();
+        const backendUrl = document.getElementById('backendUrl').value.trim() || 'http://localhost:3000';
+
+        if (!apiKey) {
+          statusEl.textContent = 'Error: API key is required.';
+          exportBtn.disabled = false;
+          return;
+        }
+
+        statusEl.textContent = `Sending ${msg.tokens.length} tokens...`;
 
         try {
-          const res = await fetch('http://localhost:3000/api/tokens', {
+          const res = await fetch(`${backendUrl}/api/tokens`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': apiKey,
+            },
             body: JSON.stringify({ tokens: msg.tokens }),
           });
 
           const data = await res.json();
-          status.textContent = `Done! ${data.count} tokens synced.`;
-        } catch (err) {
-          status.textContent = 'Error: Could not reach backend. Is it running?';
+
+          if (!res.ok) {
+            statusEl.textContent = `Error: ${data.error || res.status}`;
+          } else {
+            statusEl.textContent = `Done! ${data.count} tokens synced.`;
+            // Save settings after successful export
+            parent.postMessage({
+              pluginMessage: {
+                type: 'save-settings',
+                apiKey,
+                backendUrl,
+              }
+            }, '*');
+          }
+        } catch {
+          statusEl.textContent = 'Error: Could not reach backend. Is it running?';
         }
-      };
-    </script>
-  </body>
+
+        exportBtn.disabled = false;
+      }
+    };
+
+    exportBtn.onclick = () => {
+      exportBtn.disabled = true;
+      statusEl.textContent = 'Extracting tokens...';
+      previewEl.style.display = 'none';
+      parent.postMessage({ pluginMessage: { type: 'export-tokens' } }, '*');
+    };
+
+    function renderPreview(tokens) {
+      if (!tokens.length) return;
+      previewEl.style.display = 'block';
+      previewEl.innerHTML = '<strong>Preview:</strong><br>' + tokens.map(t => {
+        const swatch = t.type === 'color'
+          ? `<span class="swatch" style="background:${t.value}"></span>`
+          : '';
+        return `<div class="token-row"><span>${swatch}${t.name}</span><span>${t.value}</span></div>`;
+      }).join('');
+    }
+  </script>
+</body>
 </html>

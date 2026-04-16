@@ -7,12 +7,16 @@ export interface AnalyzeResponse {
 
 export async function analyzeFile(
   backendUrl: string,
+  apiKey: string,
   code: string,
   filePath: string
 ): Promise<AnalyzeResponse> {
   const res = await fetch(`${backendUrl}/api/analyze`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+    },
     body: JSON.stringify({ code, filePath }),
   });
 

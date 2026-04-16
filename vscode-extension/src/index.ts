@@ -8,13 +8,11 @@ const diagnosticCollection = vscode.languages.createDiagnosticCollection('alignu
 export function activate(context: vscode.ExtensionContext) {
   console.log('[AlignUI] Extension activated');
 
-  // Command: manually trigger analysis
   const analyzeCommand = vscode.commands.registerCommand('alignui.analyzeFile', () => {
     const editor = vscode.window.activeTextEditor;
     if (editor) runAnalysis(editor.document);
   });
 
-  // Auto-analyze on save
   const onSave = vscode.workspace.onDidSaveTextDocument((doc) => {
     if (SUPPORTED_LANGUAGES.includes(doc.languageId)) {
       runAnalysis(doc);
@@ -27,16 +25,21 @@ export function activate(context: vscode.ExtensionContext) {
 async function runAnalysis(document: vscode.TextDocument) {
   const config = vscode.workspace.getConfiguration('alignui');
   const backendUrl = config.get<string>('backendUrl', 'http://localhost:3000');
+  const apiKey = config.get<string>('apiKey', '');
+
+  if (!apiKey) {
+    vscode.window.showWarningMessage('AlignUI: No API key set. Add it in Settings → AlignUI → API Key.');
+    return;
+  }
 
   try {
-    const result = await analyzeFile(backendUrl, document.getText(), document.fileName);
-
+    const result = await analyzeFile(backendUrl, apiKey, document.getText(), document.fileName);
     const diagnostics = buildDiagnostics(result.issues, document);
     diagnosticCollection.set(document.uri, diagnostics);
 
     const msg = result.issues.length === 0
-      ? `AlignUI: No drift found in ${result.scanned} values scanned.`
-      : `AlignUI: ${result.issues.length} drift issue(s) found.`;
+      ? `AlignUI: No drift found (${result.scanned} values scanned)`
+      : `AlignUI: ${result.issues.length} drift issue(s) found`;
 
     vscode.window.setStatusBarMessage(msg, 5000);
   } catch (err) {
