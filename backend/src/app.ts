@@ -4,6 +4,7 @@ import rateLimit from 'express-rate-limit';
 import { requireApiKey } from './middleware/auth';
 import tokenRoutes from './routes/tokens';
 import analyzeRoutes from './routes/analyze';
+import issueRoutes from './routes/issues';
 
 export function createApp() {
   const app = express();
@@ -14,6 +15,7 @@ export function createApp() {
 
   app.use('/api/tokens', requireApiKey, tokenRoutes);
   app.use('/api/analyze', requireApiKey, analyzeRoutes);
+  app.use('/api/issues', requireApiKey, issueRoutes);
 
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok' });

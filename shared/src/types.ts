@@ -11,4 +11,5 @@ export interface DriftIssue {
   actual: string;
   file: string;
   line: number;
+  detectedAt?: string;
 }

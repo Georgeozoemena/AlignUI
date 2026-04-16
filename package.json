@@ -6,7 +6,8 @@
     "figma-plugin",
     "backend",
     "vscode-extension",
-    "shared"
+    "shared",
+    "dashboard"
   ],
   "devDependencies": {
     "typescript": "^6.0.2"

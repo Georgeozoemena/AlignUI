@@ -3,3 +3,4 @@ node_modules/
 *.log
 figma-plugin/dist/
 vscode-extension/dist/
+dashboard/.env

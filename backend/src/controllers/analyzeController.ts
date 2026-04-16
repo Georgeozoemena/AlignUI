@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { analyzeFile } from '../analyzer/codeAnalyzer';
 import { detectDrift } from '../diff/diffEngine';
 import { getStoredTokens } from './tokenController';
+import { IssueModel } from '../db/IssueModel';
 
 const AnalyzePayloadSchema = z.object({
   code: z.string().min(1),
@@ -27,6 +28,12 @@ export async function analyzeCode(req: Request, res: Response) {
 
   const codeValues = analyzeFile(code, filePath);
   const issues = detectDrift(tokens, codeValues);
+
+  // Persist issues — replace existing issues for this file
+  await IssueModel.deleteMany({ file: filePath });
+  if (issues.length > 0) {
+    await IssueModel.insertMany(issues.map((i) => ({ ...i, file: filePath })));
+  }
 
   console.log(`[analyze] ${issues.length} drift issues found in ${filePath}`);
   res.json({ issues, scanned: codeValues.length });
