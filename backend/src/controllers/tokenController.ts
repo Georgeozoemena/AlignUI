@@ -1,14 +1,8 @@
 import { Request, Response } from 'express';
 import { TokensPayloadSchema, ValidatedToken } from '../validators/tokenValidator';
+import { TokenModel } from '../db/TokenModel';
 
-// In-memory store — will be replaced with MongoDB
-let tokenStore: ValidatedToken[] = [];
-
-export function getStoredTokens(): ValidatedToken[] {
-  return tokenStore;
-}
-
-export function receiveTokens(req: Request, res: Response) {
+export async function receiveTokens(req: Request, res: Response) {
   const result = TokensPayloadSchema.safeParse(req.body);
 
   if (!result.success) {
@@ -19,11 +13,28 @@ export function receiveTokens(req: Request, res: Response) {
     return;
   }
 
-  tokenStore = result.data.tokens;
-  console.log(`[tokens] Stored ${tokenStore.length} tokens`);
-  res.json({ success: true, count: tokenStore.length });
+  const tokens = result.data.tokens;
+
+  // Upsert each token by name — keeps data fresh on every Figma export
+  await Promise.all(
+    tokens.map((token) =>
+      TokenModel.findOneAndUpdate(
+        { name: token.name },
+        token,
+        { upsert: true, new: true }
+      )
+    )
+  );
+
+  console.log(`[tokens] Upserted ${tokens.length} tokens`);
+  res.json({ success: true, count: tokens.length });
 }
 
-export function getTokens(_req: Request, res: Response) {
-  res.json({ tokens: tokenStore });
+export async function getTokens(_req: Request, res: Response) {
+  const tokens = await TokenModel.find({}, { _id: 0, __v: 0, createdAt: 0, updatedAt: 0 });
+  res.json({ tokens });
+}
+
+export async function getStoredTokens(): Promise<ValidatedToken[]> {
+  return TokenModel.find({}, { _id: 0, __v: 0, createdAt: 0, updatedAt: 0 }).lean();
 }

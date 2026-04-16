@@ -9,7 +9,7 @@ const AnalyzePayloadSchema = z.object({
   filePath: z.string().min(1),
 });
 
-export function analyzeCode(req: Request, res: Response) {
+export async function analyzeCode(req: Request, res: Response) {
   const result = AnalyzePayloadSchema.safeParse(req.body);
 
   if (!result.success) {
@@ -18,7 +18,7 @@ export function analyzeCode(req: Request, res: Response) {
   }
 
   const { code, filePath } = result.data;
-  const tokens = getStoredTokens();
+  const tokens = await getStoredTokens();
 
   if (tokens.length === 0) {
     res.status(400).json({ error: 'No tokens stored. Export from Figma first.' });
