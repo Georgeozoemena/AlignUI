@@ -1,8 +1,39 @@
 {
   "name": "@alignui/vscode-extension",
-  "version": "1.0.0",
-  "main": "index.ts",
+  "displayName": "AlignUI",
+  "description": "Detect design drift between Figma and your codebase",
+  "version": "0.1.0",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Linters"],
+  "activationEvents": ["onLanguage:typescriptreact", "onLanguage:javascriptreact"],
+  "main": "./dist/index.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "alignui.analyzeFile",
+        "title": "AlignUI: Analyze Current File for Drift"
+      }
+    ],
+    "configuration": {
+      "title": "AlignUI",
+      "properties": {
+        "alignui.backendUrl": {
+          "type": "string",
+          "default": "http://localhost:3000",
+          "description": "AlignUI backend URL"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --outfile=dist/index.js --external:vscode --platform=node --target=node18"
+  },
+  "dependencies": {
+    "@alignui/shared": "*"
+  },
   "devDependencies": {
-    "@types/vscode": "^1.110.0"
+    "@types/node": "*",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "*"
   }
 }
